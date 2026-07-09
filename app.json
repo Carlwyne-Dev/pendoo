@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Pendoo",
+    "slug": "pendoo-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/app-icon.png",
+    "scheme": "pendoomobile",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/images/app-icon.png",
+      "bundleIdentifier": "com.pendoo.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.pendoo.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/app-icon.png",
+        "backgroundColor": "#456259"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/app-icon.png"
+    },
+    "splash": {
+      "image": "./assets/images/app-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#456259"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#456259",
+          "image": "./assets/images/app-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9538e8d4-c2c8-4fd5-bc33-6ce426405e5f"
+      }
+    },
+    "owner": "wananana"
+  }
+}
