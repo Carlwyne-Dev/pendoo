@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { differenceInDays, parseISO, format, startOfDay } from 'date-fns';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
-import { Settings, RotateCcw, Trash2, Download, Upload, ChevronRight, X, Clock, CheckCircle, Plus, History, Home, Calendar, Pencil, ChevronLeft } from 'lucide-react-native';
+import { Settings, RotateCcw, Trash2, Download, Upload, ChevronRight, X, Clock, CheckCircle, Plus, History, Home, Calendar, Pencil, ChevronLeft, Bell } from 'lucide-react-native';
 import * as Notifications from 'expo-notifications';
 import Onboarding from './onboarding';
 
@@ -183,6 +183,7 @@ export default function App() {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showNotifPrompt, setShowNotifPrompt] = useState(false);
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Work');
@@ -212,36 +213,38 @@ export default function App() {
     };
   }, [view, items]);
 
+  const scheduleNotifications = async (itemsList: Item[]) => {
+    if (Platform.OS === 'web') return;
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') return;
+      
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      for (const item of itemsList) {
+        const dateStr = item.targetDate || item.followUpDate;
+        if (!item.completedAt && dateStr) {
+          const trigger = new Date(dateStr);
+          if (trigger > new Date()) {
+            const isExpected = item.dateType === 'expected';
+            await Notifications.scheduleNotificationAsync({
+              content: { 
+                title: isExpected ? 'Expected Date Reached' : 'Pendoo Follow-up', 
+                body: isExpected ? `Your pending item is due: ${item.title}` : `Time to check in on: ${item.title}` 
+              },
+              trigger,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.log('Notification scheduling failed:', error);
+    }
+  };
+
   const saveItems = async (newItems: Item[]) => {
     setItems(newItems);
     await AsyncStorage.setItem('pendoo_items', JSON.stringify(newItems));
-    
-    if (Platform.OS !== 'web') {
-      try {
-        await Notifications.cancelAllScheduledNotificationsAsync();
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status === 'granted') {
-          for (const item of newItems) {
-            const dateStr = item.targetDate || item.followUpDate;
-            if (!item.completedAt && dateStr) {
-              const trigger = new Date(dateStr);
-              if (trigger > new Date()) {
-                const isExpected = item.dateType === 'expected';
-                await Notifications.scheduleNotificationAsync({
-                  content: { 
-                    title: isExpected ? 'Expected Date Reached' : 'Pendoo Follow-up', 
-                    body: isExpected ? `Your pending item is due: ${item.title}` : `Time to check in on: ${item.title}` 
-                  },
-                  trigger: { type: 'date', date: trigger } as any,
-                });
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.log('Notification scheduling failed:', error);
-      }
-    }
+    await scheduleNotifications(newItems);
   };
 
   const activeItems = items.filter(i => !i.completedAt).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -267,13 +270,15 @@ export default function App() {
     </View>
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
+    const hasDate = !!targetDate;
+    
     if (isEditing && editingItem) {
       const updated = items.map(i => i.id === editingItem.id 
         ? { ...i, title, category, notes, targetDate: targetDate?.toISOString() || null, dateType } 
         : i);
-      saveItems(updated);
+      await saveItems(updated);
       setIsEditing(false);
       setEditingItem(null);
       setSelectedItem(null);
@@ -286,9 +291,16 @@ export default function App() {
         createdAt: new Date().toISOString(),
         completedAt: null
       };
-      saveItems([newItem, ...items]);
+      await saveItems([newItem, ...items]);
     }
     setIsCreating(false);
+
+    if (hasDate && Platform.OS !== 'web') {
+      const { status, canAskAgain } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted' && canAskAgain) {
+        setTimeout(() => setShowNotifPrompt(true), 500);
+      }
+    }
   };
 
   const openCreateModal = () => {
@@ -687,6 +699,43 @@ export default function App() {
           </View>
         </View>
       </Modal>
+
+      {/* ── NOTIFICATION SOFT PROMPT ── */}
+      <Modal visible={showNotifPrompt} transparent animationType="fade">
+        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+          <Reanimated.View entering={FadeIn.duration(400).springify()} style={{ backgroundColor: '#fff', borderRadius: 32, padding: 32, alignItems: 'center', width: '100%', maxWidth: 360, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0f9f6', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+              <Bell size={30} color="#456259" strokeWidth={2} />
+            </View>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: '#1f2937', marginBottom: 12, textAlign: 'center', letterSpacing: -0.5 }}>Stay in the loop</Text>
+            <Text style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24, marginBottom: 32 }}>Pendoo can gently remind you when your items are due. We promise to keep it peaceful and quiet.</Text>
+            
+            <View style={{ width: '100%', gap: 12 }}>
+              <TouchableOpacity
+                style={{ backgroundColor: '#456259', paddingVertical: 16, borderRadius: 999, alignItems: 'center' }}
+                activeOpacity={0.8}
+                onPress={async () => {
+                  setShowNotifPrompt(false);
+                  const { status } = await Notifications.requestPermissionsAsync();
+                  if (status === 'granted') await scheduleNotifications(items);
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Enable Reminders</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={{ paddingVertical: 16, borderRadius: 999, alignItems: 'center' }}
+                activeOpacity={0.6}
+                onPress={() => setShowNotifPrompt(false)}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#9ca3af' }}>Maybe Later</Text>
+              </TouchableOpacity>
+            </View>
+          </Reanimated.View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
