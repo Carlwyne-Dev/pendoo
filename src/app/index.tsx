@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions, StyleSheet, Alert, LayoutAnimation } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions, StyleSheet, Alert, LayoutAnimation, UIManager } from 'react-native';
 import Reanimated, { useAnimatedStyle, withTiming, Easing, FadeIn, FadeOut, SlideOutUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
@@ -11,8 +11,18 @@ import { Settings, RotateCcw, Trash2, Download, Upload, ChevronRight, X, Clock, 
 import * as Notifications from 'expo-notifications';
 import Onboarding from './onboarding';
 
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowAlert: true, shouldPlaySound: false, shouldSetBadge: false }),
+  handleNotification: async () => ({ 
+    shouldShowAlert: true, 
+    shouldPlaySound: false, 
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true
+  }),
 });
 
 interface Item {
@@ -242,6 +252,21 @@ export default function App() {
     setView(newView);
   };
 
+  const renderHeader = () => (
+    <View style={s.pageHeader}>
+      <Text style={s.pageTitle}>
+        {view === 'dashboard' 
+          ? (activeItems.length === 0 ? 'Awaiting clarity.' : 'Pending items.') 
+          : 'Past clarity.'}
+      </Text>
+      <Text style={s.pageSubtitle}>
+        {view === 'dashboard' 
+          ? (activeItems.length === 0 ? "Nothing pending. That's a peaceful place to be." : "Here is what you're currently waiting on.") 
+          : "Your resolved and completed items live here."}
+      </Text>
+    </View>
+  );
+
   const handleSave = () => {
     if (!title.trim()) return;
     if (isEditing && editingItem) {
@@ -381,19 +406,6 @@ export default function App() {
             </TouchableOpacity>
           </View>
 
-          <View style={s.pageHeader}>
-            <Text style={s.pageTitle}>
-              {view === 'dashboard' 
-                ? (activeItems.length === 0 ? 'Awaiting clarity.' : 'Pending items.') 
-                : 'Past clarity.'}
-            </Text>
-            <Text style={s.pageSubtitle}>
-              {view === 'dashboard' 
-                ? (activeItems.length === 0 ? "Nothing pending. That's a peaceful place to be." : "Here is what you're currently waiting on.") 
-                : "Your resolved and completed items live here."}
-            </Text>
-          </View>
-
           <View style={[StyleSheet.absoluteFill, { zIndex: -1, pointerEvents: 'none', justifyContent: 'flex-end' }]}>
             <Reanimated.View style={[{ width: '100%', backgroundColor: '#e3eadc' }, hillAnimatedStyle]}>
               <DashboardHillCurve />
@@ -401,7 +413,8 @@ export default function App() {
           </View>
 
           {view === 'dashboard' && activeItems.length === 0 ? (
-            <Reanimated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={s.emptyState}>
+            <Reanimated.View key="empty-dash" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
+              {renderHeader()}
               <View style={s.emptyTop}>
                 <Image source={require('../../assets/images/pics/pip_home.png')} style={s.emptyImg} contentFit="contain" />
               </View>
@@ -414,7 +427,8 @@ export default function App() {
               </View>
             </Reanimated.View>
           ) : view === 'history' && completedItems.length === 0 ? (
-            <Reanimated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={s.emptyState}>
+            <Reanimated.View key="empty-hist" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
+              {renderHeader()}
               <View style={s.emptyTop}>
                 <Image source={require('../../assets/images/pics/pip_history.png')} style={s.emptyImg} contentFit="contain" />
               </View>
@@ -424,9 +438,10 @@ export default function App() {
               </View>
             </Reanimated.View>
           ) : (
-            <ScrollView style={s.list} contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+            <ScrollView key="scroll-list" style={s.list} contentContainerStyle={{ paddingTop: 60, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+              {renderHeader()}
               {view === 'dashboard' ? (
-                <Reanimated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+                <Reanimated.View key="dashboard-list" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
                   {activeItems.map(item => {
                     const today = startOfDay(new Date());
                     const targetDateStr = item.targetDate || item.followUpDate;
@@ -494,7 +509,7 @@ export default function App() {
                   })}
                 </Reanimated.View>
               ) : (
-                <Reanimated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+                <Reanimated.View key="history-list" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
                   {completedItems.map(item => (
                     <TouchableOpacity key={item.id} style={[s.card, { opacity: 0.8 }]} onPress={() => setSelectedItem(item)}>
                       <View style={{ flex: 1, paddingRight: 16 }}>
@@ -572,7 +587,7 @@ export default function App() {
                     <TouchableOpacity onPress={() => setDateType('followUp')} style={[s.dateTypeBtn, dateType === 'followUp' && s.dateTypeBtnActive]}><Text style={[s.dateTypeText, dateType === 'followUp' && s.dateTypeTextActive]}>Follow Up</Text></TouchableOpacity>
                     <TouchableOpacity onPress={() => setDateType('expected')} style={[s.dateTypeBtn, dateType === 'expected' && s.dateTypeBtnActive]}><Text style={[s.dateTypeText, dateType === 'expected' && s.dateTypeTextActive]}>Expected</Text></TouchableOpacity>
                   </View>
-                  <InlineCalendar value={targetDate} onChange={(date) => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easing); setTargetDate(date); setShowDatePicker(false); }} />
+                  <InlineCalendar value={targetDate} onChange={(date) => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setTargetDate(date); setShowDatePicker(false); }} />
                 </View>
               )}
               <View style={s.addNotesBtn}>
@@ -679,7 +694,7 @@ export default function App() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#faf9f7', overflow: 'hidden' },
   // Top bar
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#faf9f7', borderBottomWidth: 1, borderBottomColor: '#f0eeeb' },
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'transparent' },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatarWrapper: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f0eeeb', overflow: 'hidden' },
   avatar: { width: '100%', height: '100%' },
@@ -687,14 +702,14 @@ const s = StyleSheet.create({
   settingsBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'flex-end', justifyContent: 'center' },
 
   // Typography Header
-  pageHeader: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 32 },
-  pageTitle: { fontSize: 42, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', color: '#1a1c1b', marginBottom: 12, letterSpacing: -0.5 },
+  pageHeader: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 },
+  pageTitle: { fontSize: 34, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', color: '#1a1c1b', marginBottom: 12, letterSpacing: -0.5 },
   pageSubtitle: { fontSize: 17, color: '#6b7280', lineHeight: 24, paddingRight: 30 },
 
   // Empty State
   emptyState: { flex: 1, flexDirection: 'column' },
   emptyTop: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyBottom: { flex: 1, alignItems: 'center', paddingTop: 16 },
+  emptyBottom: { flex: 1, alignItems: 'center', paddingTop: 16, paddingBottom: 80, justifyContent: 'center' },
   emptyImg: { width: 240, height: 240, alignSelf: 'center' },
   emptyTextBlock: { alignItems: 'center' },
   emptyTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 28, color: '#1a1c1b', marginBottom: 8, textAlign: 'center' },
