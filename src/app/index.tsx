@@ -430,7 +430,11 @@ export default function App() {
           exiting={SlideOutUp.springify().damping(20).stiffness(90)} 
           style={[StyleSheet.absoluteFill, { zIndex: 100, backgroundColor: '#e3eadc' }]}
         >
-          <Onboarding onComplete={() => setOnboarded(true)} />
+          <Onboarding onComplete={async () => {
+            const savedAvatar = await AsyncStorage.getItem('pendoo_avatar');
+            if (savedAvatar) setAvatar(savedAvatar);
+            setOnboarded(true);
+          }} />
         </Reanimated.View>
       )}
 
