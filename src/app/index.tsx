@@ -279,20 +279,25 @@ export default function App() {
     setView(newView);
   };
 
-  const renderHeader = () => (
-    <View style={s.pageHeader}>
-      <Text style={s.pageTitle}>
-        {view === 'dashboard' 
-          ? (activeItems.length === 0 ? 'Awaiting clarity.' : 'Pending items.') 
-          : 'Past clarity.'}
-      </Text>
-      <Text style={s.pageSubtitle}>
-        {view === 'dashboard' 
-          ? (activeItems.length === 0 ? "Nothing pending. That's a peaceful place to be." : "Here is what you're currently waiting on.") 
-          : "Your resolved and completed items live here."}
-      </Text>
-    </View>
-  );
+  const renderHeader = (viewKey?: string) => {
+    const v = viewKey ?? view;
+    const isDash = v === 'dashboard';
+    const isEmpty = isDash ? activeItems.length === 0 : completedItems.length === 0;
+    return (
+      <View style={s.pageHeader}>
+        <Text style={s.pageTitle}>
+          {isDash
+            ? (isEmpty ? 'Awaiting clarity.' : 'Pending items.')
+            : 'Past clarity.'}
+        </Text>
+        <Text style={s.pageSubtitle}>
+          {isDash
+            ? (isEmpty ? "Nothing pending. That's a peaceful place to be." : "Here is what you're currently waiting on.")
+            : "Your resolved and completed items live here."}
+        </Text>
+      </View>
+    );
+  };
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -460,8 +465,8 @@ export default function App() {
           </View>
 
           {view === 'dashboard' && activeItems.length === 0 ? (
-            <Reanimated.View key="empty-dash" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
-              {renderHeader()}
+            <Reanimated.View key="empty-dash" entering={FadeIn.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
+              {renderHeader('dashboard')}
               <View style={s.emptyTop}>
                 <Image source={require('../../assets/images/pics/pip_home.png')} style={s.emptyImg} contentFit="contain" />
               </View>
@@ -474,8 +479,8 @@ export default function App() {
               </View>
             </Reanimated.View>
           ) : view === 'history' && completedItems.length === 0 ? (
-            <Reanimated.View key="empty-hist" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
-              {renderHeader()}
+            <Reanimated.View key="empty-hist" entering={FadeIn.duration(300)} style={[s.emptyState, { paddingTop: 60 }]}>
+              {renderHeader('history')}
               <View style={s.emptyTop}>
                 <Image source={require('../../assets/images/pics/pip_history.png')} style={s.emptyImg} contentFit="contain" />
               </View>
@@ -683,8 +688,8 @@ export default function App() {
 
       <Modal visible={!!selectedItem} transparent animationType="fade">
         <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
-        <View style={s.createModalContainer}>
-          <View style={s.createModalSheet}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 32, padding: 24, paddingBottom: 24, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 }}>
             <View style={s.createHeader}><Text style={{ fontSize: 17, fontWeight: '600', color: '#9ca3af' }}>Item Details</Text><TouchableOpacity onPress={() => setSelectedItem(null)} style={s.closeBtn}><X size={18} color="#6b7280" strokeWidth={2.5} /></TouchableOpacity></View>
             {selectedItem && (
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -854,8 +859,8 @@ const s = StyleSheet.create({
   modalTitle: { fontSize: 24, fontWeight: '800', color: '#456259' },
   closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' },
 
-  createModalContainer: { flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 20, paddingTop: '15%' },
-  createModalSheet: { backgroundColor: '#fff', borderRadius: 32, padding: 24, paddingBottom: 24, width: '100%', maxWidth: 400, maxHeight: '85%', shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 },
+  createModalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
+  createModalSheet: { backgroundColor: '#fff', borderRadius: 32, padding: 24, paddingBottom: 24, width: '100%', maxWidth: 400, maxHeight: '80%', shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 },
   createHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   createCancelText: { fontSize: 17, color: '#6b7280', fontWeight: '500' },
   createSaveBtn: { backgroundColor: '#456259', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
