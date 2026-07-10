@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, format } from 'date-fns';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 
 const CATEGORIES = ['Work', 'Personal', 'Financial', 'Medical', 'Home', 'Learning', 'General'];
 
+type Item = {
+  id: string;
+  title: string;
+  category: string;
+  notes: string;
+  createdAt: string;
+  completedAt: string | null;
+};
+
 export default function App() {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [hasOnboarded, setHasOnboarded] = useState(true);
   const [avatar, setAvatar] = useState('avatar1');
   const [view, setView] = useState('dashboard');
@@ -29,13 +38,13 @@ export default function App() {
     loadData();
   }, []);
 
-  const saveItems = async (newItems) => {
+  const saveItems = async (newItems: Item[]) => {
     setItems(newItems);
     await AsyncStorage.setItem('pendoo_items', JSON.stringify(newItems));
   };
 
   const activeItems = items.filter(i => !i.completedAt).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const completedItems = items.filter(i => i.completedAt).sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+  const completedItems = items.filter(i => i.completedAt).sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
   
   const handleSave = () => {
     if (!title.trim()) return;
@@ -119,7 +128,7 @@ export default function App() {
             completedItems.map((item) => (
               <View key={item.id} className="bg-white rounded-3xl p-5 shadow-sm mb-4">
                 <Text className="text-lg font-bold text-gray-800 line-through opacity-60">{item.title}</Text>
-                <Text className="text-sm text-gray-500 mt-1">Resolved on {format(parseISO(item.completedAt), 'MMM d, yyyy')}</Text>
+                <Text className="text-sm text-gray-500 mt-1">Resolved on {format(parseISO(item.completedAt!), 'MMM d, yyyy')}</Text>
               </View>
             ))
           )

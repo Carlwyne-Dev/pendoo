@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions, StyleSheet, Alert, LayoutAnimation, UIManager } from 'react-native';
-import Reanimated, { useAnimatedStyle, withTiming, Easing, FadeIn, FadeOut, SlideOutUp } from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, Easing, FadeIn, FadeOut, SlideOutUp } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -191,6 +191,30 @@ export default function App() {
   const [targetDate, setTargetDate] = useState<Date | null>(null);
   const [dateType, setDateType] = useState<'followUp' | 'expected'>('followUp');
 
+  // Expand/collapse animations for create modal
+  const notesOpenVal = useSharedValue(0);
+  const calOpenVal = useSharedValue(0);
+
+  const notesAnimStyle = useAnimatedStyle(() => ({
+    maxHeight: withSpring(notesOpenVal.value === 1 ? 200 : 0, { damping: 18, stiffness: 180 }),
+    opacity: withTiming(notesOpenVal.value, { duration: 200 }),
+    overflow: 'hidden',
+  }));
+
+  const calAnimStyle = useAnimatedStyle(() => ({
+    maxHeight: withSpring(calOpenVal.value === 1 ? 420 : 0, { damping: 18, stiffness: 180 }),
+    opacity: withTiming(calOpenVal.value, { duration: 200 }),
+    overflow: 'hidden',
+  }));
+
+  const notesIconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: withSpring(notesOpenVal.value === 1 ? '90deg' : '0deg', { damping: 16, stiffness: 180 }) }]
+  }));
+
+  const calIconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: withSpring(calOpenVal.value === 1 ? '90deg' : '0deg', { damping: 16, stiffness: 180 }) }]
+  }));
+
   useEffect(() => {
     const loadData = async () => {
       const isO = await AsyncStorage.getItem('pendoo_onboarded');
@@ -309,6 +333,8 @@ export default function App() {
     setTargetDate(null);
     setDateType('followUp');
     setShowNotes(false);
+    notesOpenVal.value = 0;
+    calOpenVal.value = 0;
     setIsEditing(false);
     setEditingItem(null);
     setIsCreating(true);
@@ -320,7 +346,11 @@ export default function App() {
     setNotes(item.notes);
     setTargetDate(item.targetDate ? new Date(item.targetDate) : (item.followUpDate ? new Date(item.followUpDate) : null));
     setDateType(item.dateType || 'followUp');
-    setShowNotes(!!item.notes);
+    const hasNotes = !!item.notes;
+    const hasDate = !!(item.targetDate || item.followUpDate);
+    setShowNotes(hasNotes);
+    notesOpenVal.value = hasNotes ? 1 : 0;
+    calOpenVal.value = hasDate ? 1 : 0;
     setIsEditing(true);
     setEditingItem(item);
     setSelectedItem(null);
@@ -450,7 +480,7 @@ export default function App() {
               </View>
             </Reanimated.View>
           ) : (
-            <ScrollView key="scroll-list" style={s.list} contentContainerStyle={{ paddingTop: 60, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+            <ScrollView key="scroll-list" style={s.list} contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
               {renderHeader()}
               {view === 'dashboard' ? (
                 <Reanimated.View key="dashboard-list" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
@@ -577,47 +607,69 @@ export default function App() {
                 ))}
               </View>
               <View style={s.addNotesBtn}>
-                <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setShowDatePicker(!showDatePicker); }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => {
+                  const next = !showDatePicker;
+                  setShowDatePicker(next);
+                  calOpenVal.value = next ? 1 : 0;
+                }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                   <Calendar size={16} color={targetDate ? '#456259' : '#6b7280'} strokeWidth={2.5} />
                   <Text style={[s.addNotesText, targetDate && { color: '#456259', fontWeight: '600' }]}>
                     {targetDate ? (dateType === 'expected' ? `Expected: ${format(targetDate, 'MMM d, yyyy')}` : `Follow up: ${format(targetDate, 'MMM d, yyyy')}`) : 'Set target date'}
                   </Text>
                 </TouchableOpacity>
                 {targetDate ? (
-                  <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setTargetDate(null); setShowDatePicker(false); }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                  <TouchableOpacity onPress={() => { setTargetDate(null); setShowDatePicker(false); calOpenVal.value = 0; }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                     <X size={16} color="#9ca3af" strokeWidth={2.5} />
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setShowDatePicker(!showDatePicker); }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <ChevronRight size={16} color="#9ca3af" strokeWidth={2.5} style={{ transform: [{ rotate: showDatePicker ? '90deg' : '0deg' }] }} />
+                  <TouchableOpacity onPress={() => {
+                    const next = !showDatePicker;
+                    setShowDatePicker(next);
+                    calOpenVal.value = next ? 1 : 0;
+                  }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Reanimated.View style={calIconAnimStyle}>
+                      <ChevronRight size={16} color="#9ca3af" strokeWidth={2.5} />
+                    </Reanimated.View>
                   </TouchableOpacity>
                 )}
               </View>
-              {showDatePicker && (
+              <Reanimated.View style={calAnimStyle}>
                 <View>
                   <View style={s.dateToggleContainer}>
                     <TouchableOpacity onPress={() => setDateType('followUp')} style={[s.dateTypeBtn, dateType === 'followUp' && s.dateTypeBtnActive]}><Text style={[s.dateTypeText, dateType === 'followUp' && s.dateTypeTextActive]}>Follow Up</Text></TouchableOpacity>
                     <TouchableOpacity onPress={() => setDateType('expected')} style={[s.dateTypeBtn, dateType === 'expected' && s.dateTypeBtnActive]}><Text style={[s.dateTypeText, dateType === 'expected' && s.dateTypeTextActive]}>Expected</Text></TouchableOpacity>
                   </View>
-                  <InlineCalendar value={targetDate} onChange={(date) => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setTargetDate(date); setShowDatePicker(false); }} />
+                  <InlineCalendar value={targetDate} onChange={(date) => { setTargetDate(date); calOpenVal.value = 0; setShowDatePicker(false); }} />
                 </View>
-              )}
+              </Reanimated.View>
               <View style={s.addNotesBtn}>
-                <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setShowNotes(!showNotes); }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => {
+                  const next = !showNotes;
+                  setShowNotes(next);
+                  notesOpenVal.value = next ? 1 : 0;
+                }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                   <Plus size={16} color={notes.trim() ? '#456259' : '#6b7280'} strokeWidth={2.5} />
                   <Text style={[s.addNotesText, notes.trim() && { color: '#456259', fontWeight: '600' }]}>{notes.trim() ? 'Details added' : 'Add details'}</Text>
                 </TouchableOpacity>
                 {notes.trim() ? (
-                  <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setNotes(''); setShowNotes(false); }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                  <TouchableOpacity onPress={() => { setNotes(''); setShowNotes(false); notesOpenVal.value = 0; }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                     <X size={16} color="#9ca3af" strokeWidth={2.5} />
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setShowNotes(!showNotes); }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <ChevronRight size={16} color="#9ca3af" strokeWidth={2.5} style={{ transform: [{ rotate: showNotes ? '90deg' : '0deg' }] }} />
+                  <TouchableOpacity onPress={() => {
+                    const next = !showNotes;
+                    setShowNotes(next);
+                    notesOpenVal.value = next ? 1 : 0;
+                  }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Reanimated.View style={notesIconAnimStyle}>
+                      <ChevronRight size={16} color="#9ca3af" strokeWidth={2.5} />
+                    </Reanimated.View>
                   </TouchableOpacity>
                 )}
               </View>
-              {showNotes && <TextInput value={notes} onChangeText={setNotes} placeholder="Extra details..." multiline style={s.notesInputIos} placeholderTextColor="#9ca3af" textAlignVertical="top" />}
+              <Reanimated.View style={notesAnimStyle}>
+                <TextInput value={notes} onChangeText={setNotes} placeholder="Extra details..." multiline style={s.notesInputIos} placeholderTextColor="#9ca3af" textAlignVertical="top" />
+              </Reanimated.View>
               <View style={{ height: 40 }} />
             </ScrollView>
           </View>
@@ -751,7 +803,7 @@ const s = StyleSheet.create({
   settingsBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'flex-end', justifyContent: 'center' },
 
   // Typography Header
-  pageHeader: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 },
+  pageHeader: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20 },
   pageTitle: { fontSize: 34, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: 'bold', color: '#1a1c1b', marginBottom: 12, letterSpacing: -0.5 },
   pageSubtitle: { fontSize: 17, color: '#6b7280', lineHeight: 24, paddingRight: 30 },
 
@@ -783,7 +835,7 @@ const s = StyleSheet.create({
   // Bottom nav
   bottomNav: { position: 'absolute', bottom: 28, left: 0, right: 0, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   navPill: { backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 6, paddingVertical: 6, borderRadius: 999, flexDirection: 'row', gap: 4, borderWidth: 1, borderColor: '#f0eeeb', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
-  navBtn: { flexDirection: 'row', alignItems: 'center', height: 40, borderRadius: 20 },
+  navBtn: { flexDirection: 'row', alignItems: 'center', height: 44, borderRadius: 22 },
   navBtnActive: { backgroundColor: '#456259' },
   navBtnText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
   navBtnTextActive: { color: '#fff' },

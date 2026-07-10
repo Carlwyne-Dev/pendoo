@@ -24,11 +24,7 @@
       "output": "static",
       "favicon": "./assets/images/app-icon.png"
     },
-    "splash": {
-      "image": "./assets/images/app-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#456259"
-    },
+
     "plugins": [
       "expo-router",
       "expo-notifications",
