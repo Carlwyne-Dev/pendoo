@@ -31,8 +31,8 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#456259",
-          "image": "./assets/images/pics/onboarding_pendoo.png",
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/pics/favicon.png",
           "imageWidth": 200
         }
       ],
