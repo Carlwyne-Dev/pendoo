@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions, StyleSheet, Alert, LayoutAnimation, UIManager } from 'react-native';
-import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, Easing, FadeIn, FadeOut, SlideOutUp } from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, Easing, FadeIn, FadeOut, SlideOutUp, SlideInLeft, SlideInRight } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -255,7 +255,7 @@ export default function App() {
                 title: isExpected ? 'Expected Date Reached' : 'Pendoo Follow-up', 
                 body: isExpected ? `Your pending item is due: ${item.title}` : `Time to check in on: ${item.title}` 
               },
-              trigger,
+              trigger: { date: trigger },
             });
           }
         }
@@ -483,7 +483,7 @@ export default function App() {
             <ScrollView key="scroll-list" style={s.list} contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
               {renderHeader()}
               {view === 'dashboard' ? (
-                <Reanimated.View key="dashboard-list" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+                <Reanimated.View key="dashboard-list" entering={SlideInLeft.duration(300)}>
                   {activeItems.map(item => {
                     const today = startOfDay(new Date());
                     const targetDateStr = item.targetDate || item.followUpDate;
@@ -551,7 +551,7 @@ export default function App() {
                   })}
                 </Reanimated.View>
               ) : (
-                <Reanimated.View key="history-list" entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+                <Reanimated.View key="history-list" entering={SlideInRight.duration(300)}>
                   {completedItems.map(item => (
                     <TouchableOpacity key={item.id} style={[s.card, { opacity: 0.8 }]} onPress={() => setSelectedItem(item)}>
                       <View style={{ flex: 1, paddingRight: 16 }}>
