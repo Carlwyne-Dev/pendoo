@@ -22,7 +22,7 @@ const AVATAR_SOURCES: Record<string, any> = {
 };
 
 const STEPS = [
-  { image: require('../../assets/images/pics/favicon.png'), title: 'Welcome to Pendoo', desc: 'Your quiet queue for things you are waiting on. Free your mind from holding onto pending tasks.' },
+  { image: require('../../assets/images/pics/onboarding_pendoo.png'), title: 'Welcome to Pendoo', desc: 'Your quiet queue for things you are waiting on. Free your mind from holding onto pending tasks.' },
   { image: require('../../assets/images/pics/onboarding_2.png'), title: 'Track the wait', desc: 'Log items, set follow-up dates, and see exactly how long you have been waiting at a glance.' },
   { image: require('../../assets/images/pics/onboarding_3.png'), title: 'Peace of mind', desc: 'No accounts, no cloud. Everything stays privately on your device.' },
   { isAvatar: true, title: 'Pick your companion', desc: 'You can change this anytime.' },
