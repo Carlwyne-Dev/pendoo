@@ -520,8 +520,8 @@ export default function App() {
                       } else {
                         daysValue = diff;
                         daysLabel = 'LEFT';
-                        circleColor = '#e0e7ff';
-                        numColor = '#4f46e5';
+                        circleColor = '#d1ebe3';
+                        numColor = '#456259';
                       }
                     } else {
                       daysValue = differenceInDays(today, startOfDay(parseISO(item.createdAt)));
