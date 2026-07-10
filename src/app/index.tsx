@@ -255,7 +255,7 @@ export default function App() {
                 title: isExpected ? 'Expected Date Reached' : 'Pendoo Follow-up', 
                 body: isExpected ? `Your pending item is due: ${item.title}` : `Time to check in on: ${item.title}` 
               },
-              trigger: { date: trigger },
+              trigger: { type: 'date', date: trigger } as any,
             });
           }
         }
