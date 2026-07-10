@@ -348,9 +348,10 @@ export default function App() {
     setDateType(item.dateType || 'followUp');
     const hasNotes = !!item.notes;
     const hasDate = !!(item.targetDate || item.followUpDate);
-    setShowNotes(hasNotes);
-    notesOpenVal.value = hasNotes ? 1 : 0;
-    calOpenVal.value = hasDate ? 1 : 0;
+    setShowNotes(false);
+    notesOpenVal.value = 0;
+    calOpenVal.value = 0;
+    setShowDatePicker(false);
     setIsEditing(true);
     setEditingItem(item);
     setSelectedItem(null);
@@ -849,9 +850,8 @@ const s = StyleSheet.create({
   modalTitle: { fontSize: 24, fontWeight: '800', color: '#456259' },
   closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' },
 
-  // iOS Create Modal
-  createModalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
-  createModalSheet: { backgroundColor: '#fff', borderRadius: 32, padding: 24, paddingBottom: 24, width: '100%', maxWidth: 400, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 },
+  createModalContainer: { flex: 1, justifyContent: 'flex-start', alignItems: 'center', paddingHorizontal: 20, paddingTop: '15%' },
+  createModalSheet: { backgroundColor: '#fff', borderRadius: 32, padding: 24, paddingBottom: 24, width: '100%', maxWidth: 400, maxHeight: '85%', shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 20 },
   createHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   createCancelText: { fontSize: 17, color: '#6b7280', fontWeight: '500' },
   createSaveBtn: { backgroundColor: '#456259', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
