@@ -24,7 +24,6 @@
       "output": "static",
       "favicon": "./assets/images/app-icon.png"
     },
-
     "plugins": [
       "expo-router",
       "expo-notifications",
@@ -45,9 +44,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "9538e8d4-c2c8-4fd5-bc33-6ce426405e5f"
+        "projectId": "b1c95948-8d12-4063-b3b7-aae8bff994c4"
       }
     },
-    "owner": "wananana"
+    "owner": "wanaaaa"
   }
 }
