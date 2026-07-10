@@ -196,23 +196,23 @@ export default function App() {
   const calOpenVal = useSharedValue(0);
 
   const notesAnimStyle = useAnimatedStyle(() => ({
-    maxHeight: withSpring(notesOpenVal.value === 1 ? 200 : 0, { damping: 18, stiffness: 180 }),
+    maxHeight: withTiming(notesOpenVal.value === 1 ? 200 : 0, { duration: 300, easing: Easing.out(Easing.cubic) }),
     opacity: withTiming(notesOpenVal.value, { duration: 200 }),
     overflow: 'hidden',
   }));
 
   const calAnimStyle = useAnimatedStyle(() => ({
-    maxHeight: withSpring(calOpenVal.value === 1 ? 420 : 0, { damping: 18, stiffness: 180 }),
+    maxHeight: withTiming(calOpenVal.value === 1 ? 420 : 0, { duration: 300, easing: Easing.out(Easing.cubic) }),
     opacity: withTiming(calOpenVal.value, { duration: 200 }),
     overflow: 'hidden',
   }));
 
   const notesIconAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: withSpring(notesOpenVal.value === 1 ? '90deg' : '0deg', { damping: 16, stiffness: 180 }) }]
+    transform: [{ rotate: withTiming(notesOpenVal.value === 1 ? '90deg' : '0deg', { duration: 300, easing: Easing.out(Easing.cubic) }) }]
   }));
 
   const calIconAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: withSpring(calOpenVal.value === 1 ? '90deg' : '0deg', { damping: 16, stiffness: 180 }) }]
+    transform: [{ rotate: withTiming(calOpenVal.value === 1 ? '90deg' : '0deg', { duration: 300, easing: Easing.out(Easing.cubic) }) }]
   }));
 
   useEffect(() => {
@@ -795,7 +795,7 @@ export default function App() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#faf9f7', overflow: 'hidden' },
   // Top bar
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'transparent' },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, backgroundColor: 'transparent', zIndex: 10 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatarWrapper: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f0eeeb', overflow: 'hidden' },
   avatar: { width: '100%', height: '100%' },

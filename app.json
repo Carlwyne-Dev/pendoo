@@ -15,7 +15,7 @@
     "android": {
       "package": "com.pendoo.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/app-icon.png",
+        "foregroundImage": "./assets/images/pics/onboarding_pendoo.png",
         "backgroundColor": "#456259"
       },
       "predictiveBackGestureEnabled": false
@@ -32,7 +32,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#456259",
-          "image": "./assets/images/app-icon.png",
+          "image": "./assets/images/pics/onboarding_pendoo.png",
           "imageWidth": 200
         }
       ],
